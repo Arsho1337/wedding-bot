@@ -73,3 +73,6 @@ CODE_WINDOW_SECONDS = 900
 # Proxy (optional): "socks5://user:pass@host:port" or "http://host:port"
 # Set PROXY_URL in .env to enable. Empty = no proxy.
 PROXY_URL: str = os.environ.get("PROXY_URL", "").strip()
+
+# Port for health check server (Render sets PORT env var for Web Services)
+PORT: str = os.environ.get("PORT", "10000")

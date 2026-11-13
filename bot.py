@@ -12,12 +12,14 @@ Run:  python bot.py
 
 from __future__ import annotations
 
+import asyncio
 import html
 import logging
 import secrets
 import sys
 import time
 
+from aiohttp import web
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.constants import ParseMode
 from telegram.ext import (
@@ -683,6 +685,24 @@ def build_application() -> Application:
     return app
 
 
+# Health check handler for Render Web Service port detection
+async def health_check(request):
+    return web.Response(text="OK", status=200)
+
+
+async def start_health_server(port: int = 10000):
+    """Start aiohttp server for Render health checks."""
+    app = web.Application()
+    app.router.add_get("/", health_check)
+    app.router.add_get("/health", health_check)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, "0.0.0.0", port)
+    await site.start()
+    log.info("Health server started on port %d", port)
+    return runner
+
+
 def main() -> None:
     if not config.BOT_TOKEN:
         sys.exit("BOT_TOKEN is missing — set it in .env or the environment.")
@@ -690,12 +710,16 @@ def main() -> None:
         sys.exit("ADMIN_IDS is missing — put your Telegram id there (use /id).")
 
     # Python 3.14+ fix: create and set event loop for python-telegram-bot
-    import asyncio
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
 
     db.init_db()
     log.info("starting; db=%s tz=%s admins=%s", config.DB_PATH, config.TZ_NAME, sorted(config.ADMIN_IDS))
+
+    # Start health check server (for Render Web Service port detection)
+    port = int(config.PORT) if hasattr(config, 'PORT') else 10000
+    loop.run_until_complete(start_health_server(port))
+
     app = build_application()
     app.run_polling(allowed_updates=Update.ALL_TYPES, drop_pending_updates=True)
 

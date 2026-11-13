@@ -1,5 +1,6 @@
 # Bot runtime
 python-telegram-bot>=21.0,<22.0
+aiohttp>=3.9.0
 
 # ZoneInfo data for systems without a system tz database (e.g. Windows dev box)
 tzdata>=2023.3
