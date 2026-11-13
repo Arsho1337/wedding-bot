@@ -689,11 +689,10 @@ def main() -> None:
     if not config.ADMIN_IDS:
         sys.exit("ADMIN_IDS is missing — put your Telegram id there (use /id).")
 
-    # Windows fix: create and set event loop for python-telegram-bot (Python 3.14+)
-    if sys.platform == "win32":
-        import asyncio
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
+    # Python 3.14+ fix: create and set event loop for python-telegram-bot
+    import asyncio
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
 
     db.init_db()
     log.info("starting; db=%s tz=%s admins=%s", config.DB_PATH, config.TZ_NAME, sorted(config.ADMIN_IDS))
